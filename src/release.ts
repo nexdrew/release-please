@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import {PullRequest} from './pull-request';
 import {TagName} from './util/tag-name';
 
 export interface Release {
@@ -19,4 +20,11 @@ export interface Release {
   readonly tag: TagName;
   readonly sha: string;
   readonly notes: string;
+}
+
+export interface CandidateRelease extends Release {
+  pullRequest: PullRequest;
+  path: string;
+  draft?: boolean;
+  prerelease?: boolean;
 }

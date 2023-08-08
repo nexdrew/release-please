@@ -37,7 +37,7 @@ import {logger as defaultLogger} from './util/logger';
 import {Repository} from './repository';
 import {ReleasePullRequest} from './release-pull-request';
 import {Update} from './update';
-import {Release} from './release';
+import {Release, CandidateRelease} from './release';
 import {ROOT_PROJECT_PATH} from './manifest';
 import {signoffCommitMessage} from './util/signoff-commit-message';
 import {
@@ -171,6 +171,7 @@ interface TagIteratorOptions {
 export interface ReleaseOptions {
   draft?: boolean;
   prerelease?: boolean;
+  annotated?: boolean;
 }
 
 export interface GitHubRelease {
@@ -1352,15 +1353,44 @@ export class GitHub {
       release: Release,
       options: ReleaseOptions = {}
     ): Promise<GitHubRelease> => {
+      const owner = this.repository.owner;
+      const repo = this.repository.repo;
+      const tagName = release.tag.toString();
+      let sha = release.sha;
+      if (options?.annotated) {
+        // const message = release instanceof CandidateRelease ? (release as CandidateRelease).pullRequest?.title : `chore: release ${tagName}`
+        const message =
+          (<CandidateRelease>release).pullRequest?.title ||
+          `chore: release ${tagName}`; // TODO use release.name instead of tagName ?
+        const tagResp = await this.octokit.git.createTag({
+          owner,
+          repo,
+          tag: tagName,
+          message,
+          object: sha,
+          type: 'commit',
+          // tagger: {
+          //   name: 'release-please[bot]', // TODO don't know where to get this value
+          //   email: '55107282+release-please[bot]@users.noreply.github.com' // TODO don't know where to get this value
+          // }
+        });
+        sha = tagResp.data.sha;
+        await this.octokit.git.createRef({
+          owner,
+          repo,
+          ref: `refs/tags/${tagName}`,
+          sha,
+        });
+      }
       const resp = await this.octokit.repos.createRelease({
         name: release.name,
-        owner: this.repository.owner,
-        repo: this.repository.repo,
-        tag_name: release.tag.toString(),
+        owner,
+        repo,
+        tag_name: tagName,
         body: release.notes,
         draft: !!options.draft,
         prerelease: !!options.prerelease,
-        target_commitish: release.sha,
+        target_commitish: sha,
       });
       return {
         id: resp.data.id,

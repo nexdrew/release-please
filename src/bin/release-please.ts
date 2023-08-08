@@ -210,6 +210,13 @@ function releaseOptions(yargs: yargs.Argv): yargs.Argv {
       type: 'boolean',
       default: false,
     })
+    .option('annotated', {
+      describe:
+        'create an annotated tag (instead of a lightweight tag) ' +
+        'when creating a release',
+      type: 'boolean',
+      default: false,
+    })
     .option('label', {
       default: 'autorelease: pending',
       describe: 'comma-separated list of labels to remove to from release PR',

@@ -31,7 +31,7 @@ import {
   buildPlugin,
   ChangelogNotesType,
 } from './factory';
-import {Release} from './release';
+import {Release, CandidateRelease} from './release';
 import {Strategy} from './strategy';
 import {Merge} from './plugins/merge';
 import {ReleasePleaseManifest} from './updaters/release-please-manifest';
@@ -134,13 +134,6 @@ export interface CandidateReleasePullRequest {
   path: string;
   pullRequest: ReleasePullRequest;
   config: ReleaserConfig;
-}
-
-export interface CandidateRelease extends Release {
-  pullRequest: PullRequest;
-  path: string;
-  draft?: boolean;
-  prerelease?: boolean;
 }
 
 interface ReleaserConfigJson {
